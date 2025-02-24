@@ -4,7 +4,7 @@ const cache = new NodeCache({ stdTTL: 3600 }); // TTL de 1 hora (3600 segundos)
 
 // URLs da API do 365Scores
 const GAMES_TODAY_URL =
-  'https://webws.365scores.com/web/games/?appTypeId=5&langId=31&timezoneName=America/Sao_Paulo&userCountryId=21&onlyMajorGames=true&date=';
+  'https://webws.365scores.com/web/games/allscores/?appTypeId=5&langId=31&timezoneName=America/Sao_Paulo&userCountryId=21&&date=';
 const GAME_DETAIL_URL =
   'https://webws.365scores.com/web/game/?appTypeId=5&langId=31&timezoneName=America/Sao_Paulo&userCountryId=21&gameId={gameId}&topBookmaker=156';
 
