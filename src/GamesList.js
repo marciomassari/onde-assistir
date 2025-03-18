@@ -7,20 +7,8 @@ function GamesList() {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Estados para os filtros individuais
-  const [filterChampionship, setFilterChampionship] = useState("");
-  const [filterTeam, setFilterTeam] = useState("");
-  const [filterTime, setFilterTime] = useState("");
-
-  // Estado para o filtro global (lido da URL)
-  const [globalQuery, setGlobalQuery] = useState("");
-
-  // Efeito para limpar o filtro global quando inputs individuais mudam
-  useEffect(() => {
-    if (filterChampionship || filterTeam || filterTime) {
-      setGlobalQuery("");
-    }
-  }, [filterChampionship, filterTeam, filterTime]);
+  // Estado unificado para a busca global
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Estado para exibir todos os jogos (mesmo sem transmissão)
   const [showAllGames, setShowAllGames] = useState(false);
@@ -29,30 +17,25 @@ function GamesList() {
   const [activeSport, setActiveSport] = useState("");
 
   // Estado para armazenar se cada campeonato está recolhido ou não
+  // A chave será uma string composta por "sport-league"
   const [collapsedLeagues, setCollapsedLeagues] = useState({});
 
   // Função para formatar a visualização da hora (apenas hh:mm)
   const formatTime = (startTime) => {
-    if (startTime.toLowerCase() === 'indisponível') {
-      return startTime;
-    }
+    if (startTime.toLowerCase() === 'indisponível') return startTime;
     const parts = startTime.split(' ');
     if (parts.length >= 2) {
       const timeParts = parts[1].split(':');
-      if (timeParts.length >= 2) {
-        return `${timeParts[0]}:${timeParts[1]}`;
-      }
+      if (timeParts.length >= 2) return `${timeParts[0]}:${timeParts[1]}`;
     }
     return startTime;
   };
 
-  // Efeito para ler o parâmetro "q" da URL e definir o filtro global
+  // Efeito para ler o parâmetro "q" da URL e definir o searchQuery
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const q = params.get('q');
-    if (q) {
-      setGlobalQuery(q);
-    }
+    if (q) setSearchQuery(q);
   }, []);
 
   // Busca os dados do backend
@@ -64,9 +47,7 @@ function GamesList() {
         setLoading(false);
         if (data.length > 0) {
           const sports = [...new Set(data.map((game) => game.sport))];
-          if (sports.length > 0) {
-            setActiveSport(sports[0]);
-          }
+          if (sports.length > 0) setActiveSport(sports[0]);
         }
       })
       .catch((error) => {
@@ -80,12 +61,8 @@ function GamesList() {
     return games.reduce((acc, game) => {
       const sport = game.sport || 'Esporte Desconhecido';
       const league = game.league || 'Liga Desconhecida';
-      if (!acc[sport]) {
-        acc[sport] = {};
-      }
-      if (!acc[sport][league]) {
-        acc[sport][league] = [];
-      }
+      if (!acc[sport]) acc[sport] = {};
+      if (!acc[sport][league]) acc[sport][league] = [];
       acc[sport][league].push(game);
       return acc;
     }, {});
@@ -117,47 +94,34 @@ function GamesList() {
           }
         }
         // Filtro de transmissão
-        const transmissionMatch = showAllGames 
-          ? true 
-          : game.tv_networks.toLowerCase() !== 'indisponível';
+        const transmissionMatch =
+          showAllGames ? true : game.tv_networks.toLowerCase() !== 'indisponível';
 
-        let searchMatch;
-        if (globalQuery.trim() !== "") {
-          const query = globalQuery.toLowerCase();
+        // Se o searchQuery estiver preenchido, filtra nos três campos
+        if (searchQuery.trim() !== "") {
+          const query = searchQuery.toLowerCase();
           const leagueMatch = game.league.toLowerCase().includes(query);
-          const teamMatch = game.home_team.toLowerCase().includes(query) ||
-                            game.away_team.toLowerCase().includes(query);
+          const teamMatch =
+            game.home_team.toLowerCase().includes(query) ||
+            game.away_team.toLowerCase().includes(query);
           let timeMatch = false;
           if (timeString !== 'indisponível') {
-            const parts = timeString.split(' ');
+            const parts = game.start_time.split(' ');
             if (parts.length >= 2) {
+              // Considera apenas hh:mm para a filtragem
               const hourPart = parts[1].split(':').slice(0, 2).join(':');
               timeMatch = hourPart.includes(query);
             }
           }
-          searchMatch = leagueMatch || teamMatch || timeMatch;
+          return (leagueMatch || teamMatch || timeMatch) && isFuture && transmissionMatch;
         } else {
-          const championshipMatch = game.league.toLowerCase().includes(filterChampionship.toLowerCase());
-          const teamMatch = game.home_team.toLowerCase().includes(filterTeam.toLowerCase()) ||
-                            game.away_team.toLowerCase().includes(filterTeam.toLowerCase());
-          let timeMatch = false;
-          if (timeString !== 'indisponível') {
-            const parts = timeString.split(' ');
-            if (parts.length >= 2) {
-              const hourPart = parts[1].split(':').slice(0, 2).join(':');
-              timeMatch = hourPart.includes(filterTime.toLowerCase());
-            }
-          } else {
-            timeMatch = filterTime.trim() === "";
-          }
-          searchMatch = championshipMatch && teamMatch && timeMatch;
+          // Se searchQuery estiver vazio, retorna os jogos que ainda não passaram e atendem à transmissão
+          return isFuture && transmissionMatch;
         }
-
-        return searchMatch && isFuture && transmissionMatch;
       });
     });
     return filtered;
-  }, [activeSport, filterChampionship, filterTeam, filterTime, groupedGames, showAllGames, globalQuery]);
+  }, [activeSport, groupedGames, showAllGames, searchQuery]);
 
   // Lista de abas (nomes dos esportes)
   const sportsTabs = useMemo(() => Object.keys(groupedGames), [groupedGames]);
@@ -210,21 +174,9 @@ function GamesList() {
         <div className="filter-section">
           <input
             type="text"
-            placeholder="Filtrar por Campeonato"
-            value={filterChampionship}
-            onChange={(e) => setFilterChampionship(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Filtrar por Time"
-            value={filterTeam}
-            onChange={(e) => setFilterTeam(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Filtrar por Horário"
-            value={filterTime}
-            onChange={(e) => setFilterTime(e.target.value)}
+            placeholder="Buscar por campeonato, time ou horário..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
           <button
             className="transmission-toggle"
