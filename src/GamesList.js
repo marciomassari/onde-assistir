@@ -7,20 +7,28 @@ function GamesList() {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Estados para os filtros
+  // Estados para os filtros individuais
   const [filterChampionship, setFilterChampionship] = useState("");
   const [filterTeam, setFilterTeam] = useState("");
   const [filterTime, setFilterTime] = useState("");
 
+  // Estado para o filtro global (lido da URL)
+  const [globalQuery, setGlobalQuery] = useState("");
+
+  // Efeito para limpar o filtro global quando inputs individuais mudam
+  useEffect(() => {
+    if (filterChampionship || filterTeam || filterTime) {
+      setGlobalQuery("");
+    }
+  }, [filterChampionship, filterTeam, filterTime]);
+
   // Estado para exibir todos os jogos (mesmo sem transmissão)
-  // Se false, mostra apenas jogos com transmissão disponível.
   const [showAllGames, setShowAllGames] = useState(false);
 
   // Estado para a aba ativa (esporte)
   const [activeSport, setActiveSport] = useState("");
 
   // Estado para armazenar se cada campeonato está recolhido ou não
-  // A chave será uma string composta por "sport-league"
   const [collapsedLeagues, setCollapsedLeagues] = useState({});
 
   // Função para formatar a visualização da hora (apenas hh:mm)
@@ -31,12 +39,21 @@ function GamesList() {
     const parts = startTime.split(' ');
     if (parts.length >= 2) {
       const timeParts = parts[1].split(':');
-      if(timeParts.length >= 2) {
+      if (timeParts.length >= 2) {
         return `${timeParts[0]}:${timeParts[1]}`;
       }
     }
     return startTime;
   };
+
+  // Efeito para ler o parâmetro "q" da URL e definir o filtro global
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q');
+    if (q) {
+      setGlobalQuery(q);
+    }
+  }, []);
 
   // Busca os dados do backend
   useEffect(() => {
@@ -74,36 +91,15 @@ function GamesList() {
     }, {});
   }, [games]);
 
-  // Aplica os filtros aos jogos do esporte ativo, incluindo a verificação se o jogo já passou
+  // Aplica os filtros aos jogos do esporte ativo
   const filteredGames = useMemo(() => {
     const sportGames = groupedGames[activeSport] || {};
     const filtered = {};
     Object.keys(sportGames).forEach((league) => {
       filtered[league] = sportGames[league].filter((game) => {
-        // Filtro por campeonato
-        const championshipMatch = game.league
-          .toLowerCase()
-          .includes(filterChampionship.toLowerCase());
-        // Filtro por time (home ou away)
-        const teamMatch =
-          game.home_team.toLowerCase().includes(filterTeam.toLowerCase()) ||
-          game.away_team.toLowerCase().includes(filterTeam.toLowerCase());
-        // Filtro por horário: extrai apenas a parte do horário (hh:mm)
-        const timeString = game.start_time.toLowerCase();
-        let timeMatch = false;
-        if (timeString !== 'indisponível') {
-          const parts = timeString.split(' ');
-          if (parts.length >= 2) {
-            const hourPart = parts[1]; // Pode vir como "19:30:00"
-            // Aqui, comparamos apenas a parte de hh:mm
-            const formattedHour = hourPart.split(':').slice(0,2).join(':');
-            timeMatch = formattedHour.includes(filterTime.toLowerCase());
-          }
-        } else {
-          timeMatch = filterTime.trim() === "";
-        }
         // Verifica se o jogo ainda não passou
         let isFuture = true;
+        const timeString = game.start_time.toLowerCase();
         if (timeString !== 'indisponível') {
           const parts = game.start_time.split(' ');
           if (parts.length >= 2) {
@@ -120,16 +116,48 @@ function GamesList() {
             isFuture = gameDate >= new Date();
           }
         }
-        // Filtro de transmissão: se showAllGames for false, exibe apenas jogos com transmissão disponível
+        // Filtro de transmissão
         const transmissionMatch = showAllGames 
           ? true 
           : game.tv_networks.toLowerCase() !== 'indisponível';
 
-        return championshipMatch && teamMatch && timeMatch && isFuture && transmissionMatch;
+        let searchMatch;
+        if (globalQuery.trim() !== "") {
+          const query = globalQuery.toLowerCase();
+          const leagueMatch = game.league.toLowerCase().includes(query);
+          const teamMatch = game.home_team.toLowerCase().includes(query) ||
+                            game.away_team.toLowerCase().includes(query);
+          let timeMatch = false;
+          if (timeString !== 'indisponível') {
+            const parts = timeString.split(' ');
+            if (parts.length >= 2) {
+              const hourPart = parts[1].split(':').slice(0, 2).join(':');
+              timeMatch = hourPart.includes(query);
+            }
+          }
+          searchMatch = leagueMatch || teamMatch || timeMatch;
+        } else {
+          const championshipMatch = game.league.toLowerCase().includes(filterChampionship.toLowerCase());
+          const teamMatch = game.home_team.toLowerCase().includes(filterTeam.toLowerCase()) ||
+                            game.away_team.toLowerCase().includes(filterTeam.toLowerCase());
+          let timeMatch = false;
+          if (timeString !== 'indisponível') {
+            const parts = timeString.split(' ');
+            if (parts.length >= 2) {
+              const hourPart = parts[1].split(':').slice(0, 2).join(':');
+              timeMatch = hourPart.includes(filterTime.toLowerCase());
+            }
+          } else {
+            timeMatch = filterTime.trim() === "";
+          }
+          searchMatch = championshipMatch && teamMatch && timeMatch;
+        }
+
+        return searchMatch && isFuture && transmissionMatch;
       });
     });
     return filtered;
-  }, [activeSport, filterChampionship, filterTeam, filterTime, groupedGames, showAllGames]);
+  }, [activeSport, filterChampionship, filterTeam, filterTime, groupedGames, showAllGames, globalQuery]);
 
   // Lista de abas (nomes dos esportes)
   const sportsTabs = useMemo(() => Object.keys(groupedGames), [groupedGames]);
@@ -152,7 +180,7 @@ function GamesList() {
 
   if (loading) {
     return <SkeletonLoader />;
-  }  
+  }
 
   return (
     <div className="site-container">
