@@ -1,0 +1,100 @@
+/* Container geral com efeito de fade-in */
+.skeleton-container {
+    padding: 2rem;
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  /* Cabeçalho placeholder */
+  .skeleton-header {
+    width: 60%;
+    height: 40px;
+    margin: 0 auto 2rem auto;
+    border-radius: 8px;
+  }
+  
+  /* Filtros placeholder */
+  .skeleton-filters {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+  
+  .skeleton-filter {
+    width: 100px;
+    height: 30px;
+    border-radius: 6px;
+  }
+  
+  /* Lista de jogos */
+  .skeleton-game-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .skeleton-league {
+    background-color: #1f1f1f;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+  
+  .skeleton-league-title {
+    width: 40%;
+    height: 20px;
+    margin-bottom: 1rem;
+    border-radius: 6px;
+  }
+  
+  /* Cada linha de jogo */
+  .skeleton-game-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .skeleton-team {
+    flex: 1;
+    height: 20px;
+    border-radius: 6px;
+  }
+  
+  .skeleton-time {
+    width: 80px;
+    height: 20px;
+    border-radius: 6px;
+  }
+  
+  /* Efeito shimmer */
+  @keyframes shimmer {
+    0% {
+      background-position: -200px 0;
+    }
+    100% {
+      background-position: 200px 0;
+    }
+  }
+  
+  .skeleton-header,
+  .skeleton-filter,
+  .skeleton-league-title,
+  .skeleton-team,
+  .skeleton-time {
+    background: #2c2c2c;
+    background-image: linear-gradient(
+      to right,
+      #2c2c2c 0%,
+      #3a3a3a 50%,
+      #2c2c2c 100%
+    );
+    background-repeat: no-repeat;
+    background-size: 400px 100%;
+    animation: shimmer 1.5s infinite linear;
+  }
+  
+  /* Fade-in effect */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }  

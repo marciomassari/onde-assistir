@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import './GamesList.css';
 import logo from './logo.png';
+import SkeletonLoader from './components/SkeletonLoader';
 
 function GamesList() {
   const [games, setGames] = useState([]);
@@ -150,8 +151,8 @@ function GamesList() {
   };
 
   if (loading) {
-    return <p>Carregando transmissões...</p>;
-  }
+    return <SkeletonLoader />;
+  }  
 
   return (
     <div className="site-container">

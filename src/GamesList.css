@@ -1,7 +1,11 @@
 /* Estilo geral do site */
+html {
+  background-color: #121212;
+}
+
 .site-container {
-  background-color: #121212; /* Fundo bem escuro */
-  color: #e0e0e0;            /* Texto claro */
+  background-color: #121212;
+  color: #e0e0e0;
   min-height: 100vh;
   font-family: 'Arial', sans-serif;
 }
