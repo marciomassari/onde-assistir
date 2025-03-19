@@ -16,7 +16,11 @@ const ShareButtonMedium = ({ title, url }) => {
   const handleClick = async () => {
     if (isMobile && navigator.share) {
       try {
-        await navigator.share({ title, url });
+        await navigator.share({
+          title: title,
+          text: title,
+          url: url
+        });
       } catch (error) {
         console.error("Erro no Web Share API:", error);
         // Se ocorrer erro, não exibe fallback no mobile
