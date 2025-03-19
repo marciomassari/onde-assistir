@@ -98,6 +98,7 @@ async function getGameDetails(gameId) {
       }
 
       return {
+        id: gameId,
         sport: sportName,
         league: leagueName,
         home_team,

@@ -125,6 +125,7 @@ html {
   padding: 0.5rem;
   margin-bottom: 0.5rem;
   background-color: #2c2c2c;
+  position: relative;
 }
 
 .teams-row {
@@ -150,6 +151,19 @@ html {
   text-align: center;
   font-size: 0.9rem;
   color: #aaa;
+}
+
+/* Compartilhamento */
+.share-button-wrapper {
+  position: absolute;
+  top: 14px;
+  right: 10px; 
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.game-row:hover .share-button-wrapper {
+  opacity: 1;
 }
 
 /* Media Queries para Mobile */
@@ -203,7 +217,7 @@ html {
   }
   
   .game-row {
-    padding: 0.5rem;
+    padding: 0.8rem;
   }
   
   .teams-row {
@@ -215,6 +229,14 @@ html {
   .start-time,
   .away-team {
     width: 100%;
+    text-align: center;
+  }
+
+  .share-button-wrapper {
+    opacity: 1;
+    position: inherit;
+    top: inherit;
+    right: inherit;
     text-align: center;
   }
 }

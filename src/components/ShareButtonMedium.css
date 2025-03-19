@@ -1,0 +1,85 @@
+/* src/components/ShareButtonMedium.css */
+
+/* Botão de compartilhamento principal */
+.share-button-medium {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6B6B6B;
+  padding: 4px;
+  transition: all 1s;
+}
+
+.share-button-medium:hover {
+  color: #b71560;
+}
+
+/* Modal overlay fixo e centralizado */
+.share-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Modal centralizado */
+.share-modal {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  position: relative;
+}
+
+.share-modal h4 {
+  color: #a00e50;
+}
+
+/* Botão de fechar modal */
+.close-modal {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Botões dentro do modal */
+.modal-button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  color: #121212;
+  border: none;
+  padding: 0.5rem 1rem;
+  margin: 0.5rem 0;
+  text-decoration: none;
+  transition: all 0.2s;
+  cursor: pointer;
+  font-size: 1rem;
+  background-color: #fff;
+}
+
+.modal-button:hover {
+  color: #a00e50;
+}
+
+/* Ícone nos botões */
+.dropdown-icon {
+  margin-right: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .share-button-medium {
+    color: #a00e50;
+  }
+}
