@@ -8,13 +8,16 @@ function GamesList() {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Estado unificado para o filtro global
+  // Estado unificado para o filtro global (campo único de busca)
   const [searchQuery, setSearchQuery] = useState("");
 
   // Estado para exibir todos os jogos (mesmo sem transmissão)
   const [showAllGames, setShowAllGames] = useState(false);
 
-  // Estado para a aba ativa (esporte) – quando searchQuery estiver vazio
+  // Novo estado: para exibir jogos que já iniciaram
+  const [showStartedGames, setShowStartedGames] = useState(false);
+
+  // Estado para a aba ativa (esporte) – usado quando searchQuery estiver vazio
   const [activeSport, setActiveSport] = useState("");
 
   // Estado para armazenar se cada campeonato está recolhido ou não
@@ -68,13 +71,13 @@ function GamesList() {
     return games.find(game => String(game.id) === String(selectedGameId));
   }, [games, selectedGameId]);
 
-  // Agrupa os jogos com base em todos os critérios e no filtro global (se preenchido)
+  // Agrupa os jogos aplicando os filtros (global e de transmissão/horário)
   const groupedGamesForFilter = useMemo(() => {
     return games.reduce((acc, game) => {
       const sport = game.sport || 'Esporte Desconhecido';
       const league = game.league || 'Liga Desconhecida';
       
-      // Aplica o filtro global se searchQuery estiver preenchido
+      // Se searchQuery estiver preenchido, aplica o filtro global (em todos os campos)
       if (searchQuery.trim() !== "") {
         const query = searchQuery.toLowerCase();
         const leagueMatch = game.league.toLowerCase().includes(query);
@@ -92,8 +95,8 @@ function GamesList() {
         if (!(leagueMatch || teamMatch || timeMatch)) return acc;
       }
       
-      // Verifica se o jogo ainda não passou
-      let isFuture = true;
+      // Verifica se o jogo já iniciou
+      let includeGame = true;
       const timeString = game.start_time.toLowerCase();
       if (timeString !== 'indisponível') {
         const parts = game.start_time.split(' ');
@@ -108,12 +111,17 @@ function GamesList() {
             parseInt(hour, 10),
             parseInt(minute, 10)
           );
-          isFuture = gameDate >= new Date();
+          // Se o jogo já começou e o usuário não deseja vê-lo, não inclui
+          if (gameDate < new Date() && !showStartedGames) {
+            includeGame = false;
+          }
         }
       }
+      if (!includeGame) return acc;
+      
       // Filtro de transmissão
       const transmissionMatch = showAllGames ? true : game.tv_networks.toLowerCase() !== 'indisponível';
-      if (!isFuture || !transmissionMatch) return acc;
+      if (!transmissionMatch) return acc;
       
       // Agrupa o jogo
       if (!acc[sport]) acc[sport] = {};
@@ -121,15 +129,14 @@ function GamesList() {
       acc[sport][league].push(game);
       return acc;
     }, {});
-  }, [games, searchQuery, showAllGames]);
+  }, [games, searchQuery, showAllGames, showStartedGames]);
 
-  // Sempre exibe o menu de categorias com todos os esportes disponíveis
+  // O menu de esportes: sempre exibe todas as categorias encontradas
   const sportsTabs = useMemo(() => {
     return [...new Set(games.map(game => game.sport || 'Esporte Desconhecido'))];
   }, [games]);
 
-  // Determina os jogos a serem exibidos:
-  // Se searchQuery estiver preenchido, exibe resultados de todos os esportes; caso contrário, exibe somente os jogos da aba ativa.
+  // Se searchQuery estiver preenchido, exibe os jogos globalmente; senão, filtra apenas os da aba ativa.
   const filteredGamesForDisplay = useMemo(() => {
     if (searchQuery.trim() !== "") {
       return groupedGamesForFilter;
@@ -138,7 +145,7 @@ function GamesList() {
     }
   }, [groupedGamesForFilter, searchQuery, activeSport]);
 
-  // Lista de campeonatos para exibição na(s) categoria(s)
+  // Lista de campeonatos para exibição
   const filteredLeagueKeys = useMemo(() => {
     let leagues = [];
     Object.keys(filteredGamesForDisplay).forEach(sport => {
@@ -173,15 +180,19 @@ function GamesList() {
           </div>
         </header>
         <main className="content">
-          <div className="game-row">
-            <div className="teams-row">
-              <span className="home-team">{selectedGame.home_team}</span>
-              <span className="start-time">{formatTime(selectedGame.start_time)}</span>
-              <span className="away-team">{selectedGame.away_team}</span>
+        <div className="games-list">
+          <div className="league-block">
+            <h3 className="league-title">{selectedGame.sport} - {selectedGame.league}</h3>
+            <div className="game-row">
+              <div className="teams-row">
+                <span className="home-team">{selectedGame.home_team}</span>
+                <span className="start-time">{formatTime(selectedGame.start_time)}</span>
+                <span className="away-team">{selectedGame.away_team}</span>
+              </div>
+              <div className="tv-networks">{selectedGame.tv_networks}</div>
             </div>
-            <div className="tv-networks">{selectedGame.tv_networks}</div>
-            <ShareButtonMedium title={shareText} url={gameShareUrl} />
           </div>
+        </div>
         </main>
       </div>
     );
@@ -218,8 +229,16 @@ function GamesList() {
             onClick={() => setShowAllGames(!showAllGames)}
           >
             {showAllGames
-              ? "Mostrar jogos com transmissão"
-              : "Mostrar jogos sem transmissão"}
+              ? "Mostrar somente jogos com transmissão"
+              : "Incluir jogos sem transmissão"}
+          </button>
+          <button
+            className="started-toggle"
+            onClick={() => setShowStartedGames(!showStartedGames)}
+          >
+            {showStartedGames
+              ? "Ocultar jogos iniciados"
+              : "Incluir jogos iniciados"}
           </button>
         </div>
         <div className="games-list">
