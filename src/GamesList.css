@@ -84,7 +84,8 @@ html {
 }
 
 /* Botão para toggle de transmissão */
-.transmission-toggle {
+.transmission-toggle,
+.started-toggle {
   padding: 0.5rem 1rem;
   border: none;
   background-color: #b71560;
@@ -93,7 +94,8 @@ html {
   transition: background-color 0.3s;
 }
 
-.transmission-toggle:hover {
+.transmission-toggle:hover,
+.started-toggle:hover {
   background-color: #fff;
   color: #b71560;
 }
