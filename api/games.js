@@ -32,7 +32,6 @@ async function getGamesToday() {
   const todayDate = getTodayDate();
   // Monta a URL com startDate e endDate iguais
   const url = `${GAMES_TODAY_URL}${todayDate}&endDate=${todayDate}`;
-  console.log("Endpoint:", url); // Verifica o endpoint montado
   try {
     const response = await axios.get(url, { headers: defaultHeaders });
     if (response.status === 200) {
