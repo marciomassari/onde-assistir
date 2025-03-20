@@ -218,8 +218,8 @@ function GamesList() {
             onClick={() => setShowAllGames(!showAllGames)}
           >
             {showAllGames
-              ? "Mostrar somente jogos com transmissão"
-              : "Incluir jogos sem transmissão"}
+              ? "Mostrar jogos com transmissão"
+              : "Mostrar jogos sem transmissão"}
           </button>
         </div>
         <div className="games-list">
