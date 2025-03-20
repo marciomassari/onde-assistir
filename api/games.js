@@ -4,7 +4,7 @@ const cache = new NodeCache({ stdTTL: 3600 }); // TTL de 1 hora (3600 segundos)
 
 // URLs da API do 365Scores
 const GAMES_TODAY_URL =
-  'https://webws.365scores.com/web/games/allscores/?appTypeId=5&langId=31&timezoneName=America/Sao_Paulo&userCountryId=21&&date=';
+  'https://webws.365scores.com/web/games/allscores/?appTypeId=5&langId=31&timezoneName=America/Sao_Paulo&userCountryId=21&startDate=';
 const GAME_DETAIL_URL =
   'https://webws.365scores.com/web/game/?appTypeId=5&langId=31&timezoneName=America/Sao_Paulo&userCountryId=21&gameId={gameId}&topBookmaker=156';
 
@@ -21,19 +21,20 @@ const defaultHeaders = {
 // Função para obter a data de hoje no formato YYYY-MM-DD
 function getTodayDate() {
   const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
   const dd = String(today.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const yyyy = today.getFullYear();
+  return `${dd}/${mm}/${yyyy}`; // Retorna a data com barras
 }
 
 // Função para buscar os IDs dos jogos do dia
 async function getGamesToday() {
+  const todayDate = getTodayDate();
+  // Monta a URL com startDate e endDate iguais
+  const url = `${GAMES_TODAY_URL}${todayDate}&endDate=${todayDate}`;
+  console.log("Endpoint:", url); // Verifica o endpoint montado
   try {
-    const todayDate = getTodayDate();
-    const response = await axios.get(`${GAMES_TODAY_URL}${todayDate}`, {
-      headers: defaultHeaders
-    });
+    const response = await axios.get(url, { headers: defaultHeaders });
     if (response.status === 200) {
       const games = response.data.games || [];
       // Extrai os gameIds
