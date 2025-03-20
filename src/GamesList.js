@@ -229,8 +229,8 @@ function GamesList() {
             onClick={() => setShowAllGames(!showAllGames)}
           >
             {showAllGames
-              ? "Mostrar somente jogos com transmissão"
-              : "Incluir jogos sem transmissão"}
+              ? "Ocultar jogos sem transmissão"
+              : "Mostrar jogos sem transmissão"}
           </button>
           <button
             className="started-toggle"
@@ -238,7 +238,7 @@ function GamesList() {
           >
             {showStartedGames
               ? "Ocultar jogos iniciados"
-              : "Incluir jogos iniciados"}
+              : "Mostrar jogos iniciados"}
           </button>
         </div>
         <div className="games-list">
