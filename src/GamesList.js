@@ -8,13 +8,13 @@ function GamesList() {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Estado unificado para o filtro de busca
+  // Estado unificado para o filtro global
   const [searchQuery, setSearchQuery] = useState("");
 
   // Estado para exibir todos os jogos (mesmo sem transmissão)
   const [showAllGames, setShowAllGames] = useState(false);
 
-  // Estado para a aba ativa (esporte)
+  // Estado para a aba ativa (esporte) – quando searchQuery estiver vazio
   const [activeSport, setActiveSport] = useState("");
 
   // Estado para armazenar se cada campeonato está recolhido ou não
@@ -50,8 +50,9 @@ function GamesList() {
       .then(data => {
         setGames(data);
         setLoading(false);
-        if (data.length > 0) {
-          const sports = [...new Set(data.map(game => game.sport))];
+        // Se searchQuery estiver vazio, define activeSport com base na lista completa
+        if (data.length > 0 && searchQuery.trim() === "") {
+          const sports = [...new Set(data.map(game => game.sport || 'Esporte Desconhecido'))];
           if (sports.length > 0) setActiveSport(sports[0]);
         }
       })
@@ -59,7 +60,7 @@ function GamesList() {
         console.error('Erro ao buscar os dados:', error);
         setLoading(false);
       });
-  }, []);
+  }, [searchQuery]);
 
   // Se um jogo foi selecionado via URL, encontre-o na lista
   const selectedGame = useMemo(() => {
@@ -67,79 +68,84 @@ function GamesList() {
     return games.find(game => String(game.id) === String(selectedGameId));
   }, [games, selectedGameId]);
 
-  // Agrupa os jogos por esporte e campeonato (liga)
-  const groupedGames = useMemo(() => {
+  // Agrupa os jogos com base em todos os critérios e no filtro global (se preenchido)
+  const groupedGamesForFilter = useMemo(() => {
     return games.reduce((acc, game) => {
       const sport = game.sport || 'Esporte Desconhecido';
       const league = game.league || 'Liga Desconhecida';
+      
+      // Aplica o filtro global se searchQuery estiver preenchido
+      if (searchQuery.trim() !== "") {
+        const query = searchQuery.toLowerCase();
+        const leagueMatch = game.league.toLowerCase().includes(query);
+        const teamMatch = game.home_team.toLowerCase().includes(query) ||
+                          game.away_team.toLowerCase().includes(query);
+        let timeMatch = false;
+        const timeString = game.start_time.toLowerCase();
+        if (timeString !== 'indisponível') {
+          const parts = game.start_time.split(' ');
+          if (parts.length >= 2) {
+            const hourPart = parts[1].split(':').slice(0, 2).join(':');
+            timeMatch = hourPart.includes(query);
+          }
+        }
+        if (!(leagueMatch || teamMatch || timeMatch)) return acc;
+      }
+      
+      // Verifica se o jogo ainda não passou
+      let isFuture = true;
+      const timeString = game.start_time.toLowerCase();
+      if (timeString !== 'indisponível') {
+        const parts = game.start_time.split(' ');
+        if (parts.length >= 2) {
+          const [datePart, timePart] = parts;
+          const [day, month, year] = datePart.split('/');
+          const [hour, minute] = timePart.split(':');
+          const gameDate = new Date(
+            parseInt(year, 10),
+            parseInt(month, 10) - 1,
+            parseInt(day, 10),
+            parseInt(hour, 10),
+            parseInt(minute, 10)
+          );
+          isFuture = gameDate >= new Date();
+        }
+      }
+      // Filtro de transmissão
+      const transmissionMatch = showAllGames ? true : game.tv_networks.toLowerCase() !== 'indisponível';
+      if (!isFuture || !transmissionMatch) return acc;
+      
+      // Agrupa o jogo
       if (!acc[sport]) acc[sport] = {};
       if (!acc[sport][league]) acc[sport][league] = [];
       acc[sport][league].push(game);
       return acc;
     }, {});
+  }, [games, searchQuery, showAllGames]);
+
+  // Sempre exibe o menu de categorias com todos os esportes disponíveis
+  const sportsTabs = useMemo(() => {
+    return [...new Set(games.map(game => game.sport || 'Esporte Desconhecido'))];
   }, [games]);
 
-  // Aplica os filtros aos jogos do esporte ativo
-  const filteredGames = useMemo(() => {
-    const sportGames = groupedGames[activeSport] || {};
-    const filtered = {};
-    Object.keys(sportGames).forEach((league) => {
-      filtered[league] = sportGames[league].filter((game) => {
-        // Verifica se o jogo ainda não passou
-        let isFuture = true;
-        const timeString = game.start_time.toLowerCase();
-        if (timeString !== 'indisponível') {
-          const parts = game.start_time.split(' ');
-          if (parts.length >= 2) {
-            const [datePart, timePart] = parts;
-            const [day, month, year] = datePart.split('/');
-            const [hour, minute] = timePart.split(':');
-            const gameDate = new Date(
-              parseInt(year, 10),
-              parseInt(month, 10) - 1,
-              parseInt(day, 10),
-              parseInt(hour, 10),
-              parseInt(minute, 10)
-            );
-            isFuture = gameDate >= new Date();
-          }
-        }
-        // Filtro de transmissão
-        const transmissionMatch = showAllGames 
-          ? true 
-          : game.tv_networks.toLowerCase() !== 'indisponível';
+  // Determina os jogos a serem exibidos:
+  // Se searchQuery estiver preenchido, exibe resultados de todos os esportes; caso contrário, exibe somente os jogos da aba ativa.
+  const filteredGamesForDisplay = useMemo(() => {
+    if (searchQuery.trim() !== "") {
+      return groupedGamesForFilter;
+    } else {
+      return { [activeSport]: groupedGamesForFilter[activeSport] || {} };
+    }
+  }, [groupedGamesForFilter, searchQuery, activeSport]);
 
-        if (searchQuery.trim() !== "") {
-          const query = searchQuery.toLowerCase();
-          const leagueMatch = game.league.toLowerCase().includes(query);
-          const teamMatch = game.home_team.toLowerCase().includes(query) ||
-                            game.away_team.toLowerCase().includes(query);
-          let timeMatch = false;
-          if (timeString !== 'indisponível') {
-            const parts = game.start_time.split(' ');
-            if (parts.length >= 2) {
-              const hourPart = parts[1].split(':').slice(0, 2).join(':');
-              timeMatch = hourPart.includes(query);
-            }
-          }
-          return (leagueMatch || teamMatch || timeMatch) && isFuture && transmissionMatch;
-        } else {
-          return isFuture && transmissionMatch;
-        }
-      });
-    });
-    return filtered;
-  }, [activeSport, groupedGames, showAllGames, searchQuery]);
-
-  // Lista de abas (esportes)
-  const sportsTabs = useMemo(() => Object.keys(groupedGames), [groupedGames]);
-
-  // Liga que possui jogos filtrados
+  // Lista de campeonatos para exibição na(s) categoria(s)
   const filteredLeagueKeys = useMemo(() => {
-    return Object.keys(filteredGames).filter(
-      league => filteredGames[league].length > 0
-    );
-  }, [filteredGames]);
+    let leagues = [];
+    Object.keys(filteredGamesForDisplay).forEach(sport => {
+      leagues = leagues.concat(Object.keys(filteredGamesForDisplay[sport]));
+    });
+    return leagues;
+  }, [filteredGamesForDisplay]);
 
   // Função para alternar o estado de recolhimento de um campeonato
   const toggleLeagueCollapse = (sport, league) => {
@@ -156,7 +162,6 @@ function GamesList() {
 
   // Se um jogo foi selecionado via URL, exibe apenas esse jogo
   if (selectedGame) {
-    // Cria o link de compartilhamento para o jogo selecionado
     const gameShareUrl = `${window.location.origin}/?game=${selectedGame.id}`;
     const shareText = `${selectedGame.home_team} vs ${selectedGame.away_team}` +
       (selectedGame.tv_networks.toLowerCase() !== 'indisponível' ? ` - Transmissão: ${selectedGame.tv_networks}` : "");
@@ -175,13 +180,13 @@ function GamesList() {
               <span className="away-team">{selectedGame.away_team}</span>
             </div>
             <div className="tv-networks">{selectedGame.tv_networks}</div>
+            <ShareButtonMedium title={shareText} url={gameShareUrl} />
           </div>
         </main>
       </div>
     );
   }
 
-  // Interface normal
   return (
     <div className="site-container">
       <header className="site-header">
@@ -221,42 +226,44 @@ function GamesList() {
           {filteredLeagueKeys.length === 0 ? (
             <p>Nenhum jogo encontrado com os filtros aplicados.</p>
           ) : (
-            filteredLeagueKeys.map(league => {
-              const key = `${activeSport}-${league}`;
-              const isCollapsed = collapsedLeagues[key] || false;
-              return (
-                <div key={league} className="league-block">
-                  <h3
-                    className="league-title"
-                    onClick={() => toggleLeagueCollapse(activeSport, league)}
-                  >
-                    {league} <span className="collapse-indicator">{isCollapsed ? "+" : "-"}</span>
-                  </h3>
-                  {!isCollapsed &&
-                    filteredGames[league].map((game, index) => {
-                      const gameShareUrl = `${window.location.origin}/?game=${game.id}`;
-                      const shareText = `${game.home_team} vs ${game.away_team}` +
-                        (game.tv_networks.toLowerCase() !== 'indisponível' ? ` - Transmissão: ${game.tv_networks}` : "");
-                      return (
-                        <div key={index} className="game-row">
-                          <div className="game-info-wrapper">
-                            <div className="teams-row">
-                              <span className="home-team">{game.home_team}</span>
-                              <span className="start-time">{formatTime(game.start_time)}</span>
-                              <span className="away-team">{game.away_team}</span>
+            Object.keys(filteredGamesForDisplay).map(sport => (
+              Object.keys(filteredGamesForDisplay[sport]).map(league => {
+                const key = `${sport}-${league}`;
+                const isCollapsed = collapsedLeagues[key] || false;
+                return (
+                  <div key={league} className="league-block">
+                    <h3
+                      className="league-title"
+                      onClick={() => toggleLeagueCollapse(sport, league)}
+                    >
+                      {league} <span className="collapse-indicator">{isCollapsed ? "+" : "-"}</span>
+                    </h3>
+                    {!isCollapsed &&
+                      filteredGamesForDisplay[sport][league].map((game, index) => {
+                        const gameShareUrl = `${window.location.origin}/?game=${game.id}`;
+                        const shareText = `${game.home_team} vs ${game.away_team}` +
+                          (game.tv_networks.toLowerCase() !== 'indisponível' ? ` - Transmissão: ${game.tv_networks}` : "");
+                        return (
+                          <div key={index} className="game-row">
+                            <div className="game-info-wrapper">
+                              <div className="teams-row">
+                                <span className="home-team">{game.home_team}</span>
+                                <span className="start-time">{formatTime(game.start_time)}</span>
+                                <span className="away-team">{game.away_team}</span>
+                              </div>
+                              <div className="tv-networks">{game.tv_networks}</div>
                             </div>
-                            <div className="tv-networks">{game.tv_networks}</div>
+                            <div className="share-button-wrapper">
+                              <ShareButtonMedium title={shareText} url={gameShareUrl} />
+                            </div>
                           </div>
-                          <div className="share-button-wrapper">
-                            <ShareButtonMedium title={shareText} url={gameShareUrl} />
-                          </div>
-                        </div>
-                      );
-                    })
-                  }
-                </div>
-              );
-            })
+                        );
+                      })
+                    }
+                  </div>
+                );
+              })
+            ))
           )}
         </div>
       </main>
