@@ -81,5 +81,7 @@
 @media (max-width: 768px) {
   .share-button-medium {
     color: #a00e50;
+    line-height: 0;
+    margin-top: 10px;
   }
 }

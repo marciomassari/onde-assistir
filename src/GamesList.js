@@ -3,6 +3,7 @@ import './GamesList.css';
 import logo from './logo.png';
 import SkeletonLoader from './components/SkeletonLoader';
 import ShareButtonMedium from './components/ShareButtonMedium';
+import SwitchToggle from './components/SwitchToggle';
 
 function GamesList() {
   const [games, setGames] = useState([]);
@@ -224,23 +225,20 @@ function GamesList() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <button
-            className="transmission-toggle"
-            onClick={() => setShowAllGames(!showAllGames)}
-          >
-            {showAllGames
-              ? "Ocultar jogos sem transmissão"
-              : "Mostrar jogos sem transmissão"}
-          </button>
-          <button
-            className="started-toggle"
-            onClick={() => setShowStartedGames(!showStartedGames)}
-          >
-            {showStartedGames
-              ? "Ocultar jogos iniciados"
-              : "Mostrar jogos iniciados"}
-          </button>
+          <div className="switch-wrapper">
+            <SwitchToggle
+              checked={showAllGames}
+              onChange={(e) => setShowAllGames(e.target.checked)}
+              label={showAllGames ? "Jogos sem transmissão" : "Jogos sem transmissão"}
+            />
+            <SwitchToggle
+              checked={showStartedGames}
+              onChange={(e) => setShowStartedGames(e.target.checked)}
+              label={showStartedGames ? "Jogos iniciados" : "Jogos iniciados"}
+            />
+          </div>
         </div>
+
         <div className="games-list">
           {filteredLeagueKeys.length === 0 ? (
             <p>Nenhum jogo encontrado com os filtros aplicados.</p>

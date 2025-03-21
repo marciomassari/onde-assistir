@@ -1,0 +1,48 @@
+/* src/components/SwitchToggle.css */
+
+.switch {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  
+  .switch-label {
+    margin-left: 8px;
+    font-size: 14px;
+    color: #e0e0e0;
+  }
+  
+  /* Esconde o input nativo */
+  .switch input {
+    display: none;
+  }
+  
+  .slider {
+    position: relative;
+    width: 40px;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 20px;
+    transition: background-color 0.3s;
+  }
+  
+  .slider::before {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 2px;
+    top: 2px;
+    background-color: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s;
+  }
+  
+  .switch input:checked + .slider {
+    background-color: #b71560;
+  }
+  
+  .switch input:checked + .slider::before {
+    transform: translateX(20px);
+  }
+  
