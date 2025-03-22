@@ -130,6 +130,9 @@ module.exports = async (req, res) => {
     console.log('Iniciando requisição /api/games');
     console.log('Ambiente:', process.env.NODE_ENV);
     console.log('TZ env:', process.env.TZ);
+    console.log('Sistema TZ:', Intl.DateTimeFormat().resolvedOptions().timeZone);
+    console.log('Data/Hora atual:', new Date().toISOString());
+    console.log('Data/Hora SP:', new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }));
     // Tenta obter os dados do cache
     const cachedData = cache.get('gamesData');
     if (cachedData) {
