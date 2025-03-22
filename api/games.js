@@ -20,11 +20,22 @@ const defaultHeaders = {
 
 // Função para obter a data de hoje no formato YYYY-MM-DD
 function getTodayDate() {
-  const today = new Date();
-  const dd = String(today.getDate()).padStart(2, '0');
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const yyyy = today.getFullYear();
-  return `${dd}/${mm}/${yyyy}`; // Retorna a data com barras
+  // Criar data explicitamente no fuso de São Paulo
+  const timeZone = 'America/Sao_Paulo';
+  const today = new Date().toLocaleString('en-US', { timeZone });
+  const todayDate = new Date(today);
+  
+  console.log('Data/hora atual em UTC:', new Date().toISOString());
+  console.log('Data/hora em São Paulo:', today);
+  
+  const dd = String(todayDate.getDate()).padStart(2, '0');
+  const mm = String(todayDate.getMonth() + 1).padStart(2, '0');
+  const yyyy = todayDate.getFullYear();
+  
+  const formattedDate = `${dd}/${mm}/${yyyy}`;
+  console.log('Data formatada para API:', formattedDate);
+  
+  return formattedDate;
 }
 
 // Função para buscar os IDs dos jogos do dia
@@ -114,8 +125,12 @@ async function getGameDetails(gameId) {
 }
 
 // Função serverless que responde à requisição GET em /api/games
+// Na função principal, adicionar mais logs
 module.exports = async (req, res) => {
   try {
+    console.log('Iniciando requisição /api/games');
+    console.log('Ambiente:', process.env.NODE_ENV);
+    console.log('TZ env:', process.env.TZ);
     // Tenta obter os dados do cache
     const cachedData = cache.get('gamesData');
     if (cachedData) {
@@ -124,6 +139,7 @@ module.exports = async (req, res) => {
 
     // Caso não esteja no cache, faça as chamadas à API:
     const gameIds = await getGamesToday();
+    console.log('IDs de jogos encontrados:', gameIds.length);
     const gameDetailsPromises = gameIds.map((id) => getGameDetails(id));
     const gamesDetails = await Promise.all(gameDetailsPromises);
     const filteredGames = gamesDetails.filter((details) => details !== null);
@@ -132,7 +148,11 @@ module.exports = async (req, res) => {
     cache.set('gamesData', filteredGames);
     res.json(filteredGames);
   } catch (error) {
-    console.error('Erro na função /api/games:', error.message);
-    res.status(500).json({ error: 'Erro ao buscar jogos.' });
+    console.error('Erro na função /api/games:', error);
+    res.status(500).json({ 
+      error: 'Erro ao buscar jogos.',
+      timestamp: new Date().toISOString(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    });
   }
 };
