@@ -20,22 +20,21 @@ const defaultHeaders = {
 
 // Função para obter a data de hoje no formato YYYY-MM-DD
 function getTodayDate() {
-  // Criar data explicitamente no fuso de São Paulo
-  const timeZone = 'America/Sao_Paulo';
-  const today = new Date().toLocaleString('en-US', { timeZone });
-  const todayDate = new Date(today);
+  // Força o uso do fuso horário de São Paulo
+  const formatter = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
   
-  console.log('Data/hora atual em UTC:', new Date().toISOString());
-  console.log('Data/hora em São Paulo:', today);
+  const today = formatter.format(new Date());
+  const [dd, mm, yyyy] = today.split('/');
   
-  const dd = String(todayDate.getDate()).padStart(2, '0');
-  const mm = String(todayDate.getMonth() + 1).padStart(2, '0');
-  const yyyy = todayDate.getFullYear();
+  console.log('Data atual UTC:', new Date().toISOString());
+  console.log('Data em São Paulo:', today);
   
-  const formattedDate = `${dd}/${mm}/${yyyy}`;
-  console.log('Data formatada para API:', formattedDate);
-  
-  return formattedDate;
+  return `${dd}/${mm}/${yyyy}`;
 }
 
 // Função para buscar os IDs dos jogos do dia
