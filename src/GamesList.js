@@ -177,23 +177,45 @@ function GamesList() {
       <div className="site-container">
         <header className="site-header">
           <div className="header-logo-container">
-            <img src={logo} alt="Logo" className="header-logo" />
+            <a href="/" className="header-logo-link">
+              <img src={logo} alt="Logo" className="header-logo" />
+            </a>
           </div>
         </header>
         <main className="content">
-        <div className="games-list">
-          <div className="league-block">
-            <h3 className="league-title">{selectedGame.sport} - {selectedGame.league}</h3>
-            <div className="game-row">
-              <div className="teams-row">
-                <span className="home-team">{selectedGame.home_team}</span>
-                <span className="start-time">{formatTime(selectedGame.start_time)}</span>
-                <span className="away-team">{selectedGame.away_team}</span>
+          <div className="games-list">
+            <div className="league-block">
+              <h3 className="league-title">{selectedGame.sport} - {selectedGame.league}</h3>
+              <div className="game-row">
+                <div className="game-info-wrapper">
+                  <div className="teams-row">
+                    <span className="home-team">
+                      {selectedGame.home_team_img && (
+                        <img 
+                          src={selectedGame.home_team_img} 
+                          alt={selectedGame.home_team}
+                          className="team-logo"
+                        />
+                      )}
+                      {selectedGame.home_team}
+                    </span>
+                    <span className="start-time">{formatTime(selectedGame.start_time)}</span>
+                    <span className="away-team">
+                      {selectedGame.away_team}
+                      {selectedGame.away_team_img && (
+                        <img 
+                          src={selectedGame.away_team_img} 
+                          alt={selectedGame.away_team}
+                          className="team-logo"
+                        />
+                      )}
+                    </span>
+                  </div>
+                  <div className="tv-networks">{selectedGame.tv_networks}</div>
+                </div>
               </div>
-              <div className="tv-networks">{selectedGame.tv_networks}</div>
             </div>
           </div>
-        </div>
         </main>
       </div>
     );
@@ -264,9 +286,27 @@ function GamesList() {
                           <div key={index} className="game-row">
                             <div className="game-info-wrapper">
                               <div className="teams-row">
-                                <span className="home-team">{game.home_team}</span>
+                                <span className="home-team">
+                                  {game.home_team_img && (
+                                    <img 
+                                      src={game.home_team_img} 
+                                      alt={game.home_team}
+                                      className="team-logo"
+                                    />
+                                  )}
+                                  {game.home_team}
+                                </span>
                                 <span className="start-time">{formatTime(game.start_time)}</span>
-                                <span className="away-team">{game.away_team}</span>
+                                <span className="away-team">
+                                  {game.away_team}
+                                  {game.away_team_img && (
+                                    <img 
+                                      src={game.away_team_img} 
+                                      alt={game.away_team}
+                                      className="team-logo"
+                                    />
+                                  )}
+                                </span>
                               </div>
                               <div className="tv-networks">{game.tv_networks}</div>
                             </div>

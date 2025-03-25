@@ -107,12 +107,23 @@ async function getGameDetails(gameId) {
         tv_networks = gameData.tvNetworks.map((tv) => tv.name).join(', ');
       }
 
+      // Adiciona URLs das imagens dos times
+      const home_team_img = gameData.homeCompetitor?.id 
+        ? `https://imagecache.365scores.com/image/upload/f_png,w_34,h_34,c_limit,q_auto:eco,dpr_2,d_Competitors:default1.png/v2/Competitors/${gameData.homeCompetitor.id}`
+        : null;
+      
+      const away_team_img = gameData.awayCompetitor?.id 
+        ? `https://imagecache.365scores.com/image/upload/f_png,w_34,h_34,c_limit,q_auto:eco,dpr_2,d_Competitors:default1.png/v2/Competitors/${gameData.awayCompetitor.id}`
+        : null;
+
       return {
         id: gameId,
         sport: sportName,
         league: leagueName,
         home_team,
         away_team,
+        home_team_img,
+        away_team_img,
         start_time,
         tv_networks
       };
@@ -124,7 +135,6 @@ async function getGameDetails(gameId) {
 }
 
 // Função serverless que responde à requisição GET em /api/games
-// Na função principal, adicionar mais logs
 module.exports = async (req, res) => {
   try {
     console.log('Iniciando requisição /api/games');

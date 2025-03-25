@@ -28,6 +28,16 @@ html {
   height: 50px;
 }
 
+.header-logo-link {
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.header-logo-link:hover {
+  opacity: 0.9;
+}
+
 /* Menu de categorias (esportes) */
 .sports-menu {
   background-color: #1f1f1f;
@@ -135,22 +145,36 @@ html {
 }
 
 .teams-row {
+  padding: 0 10px;
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.25rem;
+  align-items: center;
 }
 
 .home-team,
 .away-team {
-  font-weight: bold;
-  width: 30%;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 35%;
+}
+
+.home-team {
+  flex-direction: row-reverse;
+  text-align: right;
+  justify-content: flex-start;
+}
+
+.away-team {
+  flex-direction: row-reverse;
+  text-align: left;
+  justify-content: flex-end;
 }
 
 .start-time {
-  width: 40%;
+  flex: 0 0 auto;
   text-align: center;
-  font-weight: bold;
+  padding: 0 10px;
 }
 
 .tv-networks {
@@ -162,7 +186,7 @@ html {
 /* Compartilhamento */
 .share-button-wrapper {
   position: absolute;
-  top: 14px;
+  top: 20px;
   right: 10px; 
   opacity: 0;
   transition: opacity 0.3s ease, transform 0.3s ease;
@@ -227,26 +251,97 @@ html {
   }
   
   .game-row {
-    padding: 0.8rem;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
   }
   
   .teams-row {
-    flex-direction: row;
-    gap: 0.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 5px;
+    gap: 8px;
   }
   
   .home-team,
-  .start-time,
   .away-team {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .home-team {
+    flex-direction: column;
+  }
+
+  .away-team {
+    flex-direction: column-reverse;
+  }
+
+  .team-logo {
+    width: 34px;
+    height: 34px;
+    margin: 0 0 4px 0;
+  }
+
+  .start-time {
+    font-size: 13px;
+    font-weight: bold;
+    flex: 0 0 auto;
+    align-self: center;
+    display: flex;
+    align-items: center;
+  }
+
+  .tv-networks {
     width: 100%;
     text-align: center;
+    font-size: 13px;
+    padding: 8px 0;
+    color: #666;
   }
 
   .share-button-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 4px 0;
+    position: static;
     opacity: 1;
-    position: inherit;
-    top: inherit;
-    right: inherit;
-    text-align: center;
   }
+
+  .game-info-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+}
+
+/* Ajustes para telas muito pequenas */
+@media (max-width: 380px) {
+  .home-team, .away-team {
+    font-size: 12px;
+  }
+
+  .team-logo {
+    width: 30px;
+    height: 30px;
+  }
+
+  .start-time {
+    font-size: 12px;
+    padding: 0 4px;
+    min-width: 45px;
+  }
+}
+
+.team-logo {
+  width: 34px;
+  height: 34px;
+  vertical-align: middle;
+  margin: 0 4px;
+  object-fit: contain;
 }
