@@ -19,8 +19,13 @@ const defaultHeaders = {
 };
 
 // Função para obter a data de hoje no formato YYYY-MM-DD
-function getTodayDate() {
+// Modificar a função getTodayDate para aceitar um offset de dias
+function getTodayDate(dayOffset = 0) {
   // Força o uso do fuso horário de São Paulo
+  const date = new Date();
+  // Adiciona o offset de dias
+  date.setDate(date.getDate() + dayOffset);
+  
   const formatter = new Intl.DateTimeFormat('pt-BR', {
     timeZone: 'America/Sao_Paulo',
     year: 'numeric',
@@ -28,20 +33,20 @@ function getTodayDate() {
     day: '2-digit'
   });
   
-  const today = formatter.format(new Date());
-  const [dd, mm, yyyy] = today.split('/');
+  const formattedDate = formatter.format(date);
+  const [dd, mm, yyyy] = formattedDate.split('/');
   
   console.log('Data atual UTC:', new Date().toISOString());
-  console.log('Data em São Paulo:', today);
+  console.log(`Data em São Paulo (offset ${dayOffset}):`, formattedDate);
   
   return `${dd}/${mm}/${yyyy}`;
 }
 
-// Função para buscar os IDs dos jogos do dia
-async function getGamesToday() {
-  const todayDate = getTodayDate();
+// Modificar a função getGamesToday para aceitar o offset
+async function getGamesToday(dayOffset = 0) {
+  const targetDate = getTodayDate(dayOffset);
   // Monta a URL com startDate e endDate iguais
-  const url = `${GAMES_TODAY_URL}${todayDate}&endDate=${todayDate}`;
+  const url = `${GAMES_TODAY_URL}${targetDate}&endDate=${targetDate}`;
   try {
     const response = await axios.get(url, { headers: defaultHeaders });
     if (response.status === 200) {
@@ -136,33 +141,49 @@ async function getGameDetails(gameId) {
 
 // Função serverless que responde à requisição GET em /api/games
 module.exports = async (req, res) => {
+  // Adiciona headers CORS e tipo de conteúdo
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader('Content-Type', 'application/json');
+
   try {
     console.log('Iniciando requisição /api/games');
     console.log('Ambiente:', process.env.NODE_ENV);
     console.log('TZ env:', process.env.TZ);
-    console.log('Sistema TZ:', Intl.DateTimeFormat().resolvedOptions().timeZone);
-    console.log('Data/Hora atual:', new Date().toISOString());
-    console.log('Data/Hora SP:', new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }));
+    
+    // Obter o offset de dias da query string
+    const dayOffset = parseInt(req.query.dayOffset || '0');
+    
+    // Limitar o offset entre -1 e 1 (ontem, hoje, amanhã)
+    if (dayOffset < -1 || dayOffset > 1) {
+      return res.status(400).json({ error: 'Offset de dias inválido. Use valores entre -1 e 1.' });
+    }
+    
+    // Usar o offset como parte da chave de cache
+    const cacheKey = `gamesData_${dayOffset}`;
+    
     // Tenta obter os dados do cache
-    const cachedData = cache.get('gamesData');
+    const cachedData = cache.get(cacheKey);
     if (cachedData) {
       return res.json(cachedData);
     }
 
     // Caso não esteja no cache, faça as chamadas à API:
-    const gameIds = await getGamesToday();
-    console.log('IDs de jogos encontrados:', gameIds.length);
+    const gameIds = await getGamesToday(dayOffset);
+    console.log(`IDs de jogos encontrados (offset ${dayOffset}):`, gameIds.length);
+    
     const gameDetailsPromises = gameIds.map((id) => getGameDetails(id));
     const gamesDetails = await Promise.all(gameDetailsPromises);
     const filteredGames = gamesDetails.filter((details) => details !== null);
 
     // Armazena os dados no cache
-    cache.set('gamesData', filteredGames);
+    cache.set(cacheKey, filteredGames);
     res.json(filteredGames);
   } catch (error) {
     console.error('Erro na função /api/games:', error);
     res.status(500).json({ 
       error: 'Erro ao buscar jogos.',
+      message: error.message,
       timestamp: new Date().toISOString(),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     });

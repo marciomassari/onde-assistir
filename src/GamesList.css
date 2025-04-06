@@ -345,3 +345,66 @@ html {
   margin: 0 4px;
   object-fit: contain;
 }
+
+/* Estilo para a navegação entre dias */
+.day-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  background-color: #1f1f1f;
+  margin-top: 1rem;
+}
+
+.day-title-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 160px;
+}
+
+.day-title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #e0e0e0;
+  text-align: center;
+}
+
+.day-date {
+  font-size: 0.8rem;
+  color: #999;
+  margin-top: 0.2rem;
+}
+
+.day-nav-button {
+  background: none;
+  border: none;
+  color: #b71560;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s;
+}
+
+.day-nav-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.day-nav-button:hover:not(:disabled) {
+  opacity: 0.8;
+}
+
+/* Adicionar ao media query existente */
+@media (max-width: 768px) {
+  .day-title {
+    font-size: 1rem;
+    min-width: 140px;
+  }
+  
+  .day-navigation {
+    padding: 0.5rem;
+  }
+}

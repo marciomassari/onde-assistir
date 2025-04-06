@@ -4,10 +4,15 @@ import logo from './logo.png';
 import SkeletonLoader from './components/SkeletonLoader';
 import ShareButtonMedium from './components/ShareButtonMedium';
 import SwitchToggle from './components/SwitchToggle';
+// Adicionar ícones para navegação
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 function GamesList() {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Adicionar estado para controlar o dia selecionado
+  const [selectedDay, setSelectedDay] = useState(0); // 0 = hoje, -1 = ontem, 1 = amanhã
 
   // Estado unificado para o filtro global (campo único de busca)
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,6 +31,30 @@ function GamesList() {
 
   // Estado para armazenar o id do jogo selecionado via URL (se houver)
   const [selectedGameId, setSelectedGameId] = useState(null);
+
+  // Função para obter o texto do dia selecionado
+  const getDayText = () => {
+    switch (selectedDay) {
+      case -1:
+        return "Jogos de Ontem";
+      case 1:
+        return "Jogos de Amanhã";
+      default:
+        return "Jogos de Hoje";
+    }
+  };
+
+  // Função para obter a data formatada
+  const getFormattedDate = () => {
+    const date = new Date();
+    date.setDate(date.getDate() + selectedDay);
+    
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${day}/${month}/${year}`;
+  };
 
   // Função para formatar a visualização da hora (apenas hh:mm)
   const formatTime = (startTime) => {
@@ -49,13 +78,16 @@ function GamesList() {
 
   // Busca os dados do backend
   useEffect(() => {
-    fetch('/api/games')
+    setLoading(true);
+    fetch(`/api/games?dayOffset=${selectedDay}`)
       .then(response => response.json())
       .then(data => {
         setGames(data);
         setLoading(false);
-        // Se searchQuery estiver vazio, define activeSport com base na lista completa
-        if (data.length > 0 && searchQuery.trim() === "") {
+        
+        // Se não houver esporte ativo ou se o esporte ativo não existir nos novos dados,
+        // só então definimos um novo esporte ativo
+        if (data.length > 0 && (!activeSport || !data.some(game => game.sport === activeSport))) {
           const sports = [...new Set(data.map(game => game.sport || 'Esporte Desconhecido'))];
           if (sports.length > 0) setActiveSport(sports[0]);
         }
@@ -64,7 +96,7 @@ function GamesList() {
         console.error('Erro ao buscar os dados:', error);
         setLoading(false);
       });
-  }, [searchQuery]);
+  }, [selectedDay, activeSport]); // Adicionamos activeSport como dependência
 
   // Se um jogo foi selecionado via URL, encontre-o na lista
   const selectedGame = useMemo(() => {
@@ -239,6 +271,29 @@ function GamesList() {
           </span>
         ))}
       </nav>
+      
+      {/* Adicionar navegação entre dias */}
+      <div className="day-navigation">
+        <button 
+          className="day-nav-button"
+          onClick={() => setSelectedDay(prev => Math.max(prev - 1, -1))}
+          disabled={selectedDay === -1}
+        >
+          <FiChevronLeft size={20} />
+        </button>
+        <div className="day-title-container">
+          <h3 className="day-title">{getDayText()}</h3>
+          <span className="day-date">{getFormattedDate()}</span>
+        </div>
+        <button 
+          className="day-nav-button"
+          onClick={() => setSelectedDay(prev => Math.min(prev + 1, 1))}
+          disabled={selectedDay === 1}
+        >
+          <FiChevronRight size={20} />
+        </button>
+      </div>
+      
       <main className="content">
         <div className="filter-section">
           <input
