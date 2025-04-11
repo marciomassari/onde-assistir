@@ -206,9 +206,29 @@ function GamesList() {
     }, {});
   }, [games, searchQuery, showAllGames, showStartedGames]);
 
-  // O menu de esportes: sempre exibe todas as categorias encontradas
+  // O menu de esportes: com ordem fixa para os esportes mais comuns
   const sportsTabs = useMemo(() => {
-    return [...new Set(games.map(game => game.sport || 'Esporte Desconhecido'))];
+  // Definir a ordem fixa dos esportes mais comuns
+  const sportsOrder = [
+  'Futebol', 
+  'Basquete', 
+  'Vôlei', 
+  'Tênis', 
+  'Fórmula 1',
+  'UFC'
+  ];
+  
+  // Obter todos os esportes disponíveis nos dados
+  const availableSports = [...new Set(games.map(game => game.sport || 'Esporte Desconhecido'))];
+  
+  // Filtrar os esportes na ordem definida (apenas os que existem nos dados)
+  const orderedSports = sportsOrder.filter(sport => availableSports.includes(sport));
+  
+  // Adicionar os esportes restantes que não estão na lista fixa
+  const remainingSports = availableSports.filter(sport => !sportsOrder.includes(sport));
+  
+  // Retornar a lista completa: primeiro os esportes na ordem fixa, depois os restantes
+  return [...orderedSports, ...remainingSports];
   }, [games]);
 
   // Se searchQuery estiver preenchido, exibe os jogos globalmente; senão, filtra apenas os da aba ativa.
