@@ -32,6 +32,13 @@ function GamesList() {
   // Estado para armazenar o id do jogo selecionado via URL (se houver)
   const [selectedGameId, setSelectedGameId] = useState(null);
 
+  // Adicionar um cache para armazenar os dados de cada dia
+  const [gamesCache, setGamesCache] = useState({
+    '-1': null, // ontem
+    '0': null,  // hoje
+    '1': null   // amanhã
+  });
+
   // Função para obter o texto do dia selecionado
   const getDayText = () => {
     switch (selectedDay) {
@@ -78,14 +85,37 @@ function GamesList() {
 
   // Busca os dados do backend
   useEffect(() => {
+    // Se já temos os dados no cache, use-os
+    if (gamesCache[selectedDay]) {
+      setGames(gamesCache[selectedDay]);
+      
+      // Se não temos um esporte ativo, defina um
+      if (!activeSport && gamesCache[selectedDay].length > 0) {
+        const sports = [...new Set(gamesCache[selectedDay].map(game => game.sport || 'Esporte Desconhecido'))];
+        if (sports.length > 0 && !sports.includes(activeSport)) {
+          setActiveSport(sports[0]);
+        }
+      }
+      
+      return; // Não precisamos buscar novamente
+    }
+    
+    // Se não temos os dados no cache, mostre o loading e busque-os
     setLoading(true);
+    
     fetch(`/api/games?dayOffset=${selectedDay}`)
       .then(response => response.json())
       .then(data => {
+        // Atualizar o cache
+        setGamesCache(prev => ({
+          ...prev,
+          [selectedDay]: data
+        }));
+        
         setGames(data);
         setLoading(false);
         
-        // Se não houver esporte ativo ou se o esporte ativo não existir nos novos dados,
+        // Se não temos um esporte ativo ou se o esporte ativo não existe nos novos dados,
         // só então definimos um novo esporte ativo
         if (data.length > 0 && (!activeSport || !data.some(game => game.sport === activeSport))) {
           const sports = [...new Set(data.map(game => game.sport || 'Esporte Desconhecido'))];
@@ -96,7 +126,19 @@ function GamesList() {
         console.error('Erro ao buscar os dados:', error);
         setLoading(false);
       });
-  }, [selectedDay, activeSport]); // Adicionamos activeSport como dependência
+  }, [selectedDay, activeSport, gamesCache]);
+
+  // Modificar a função de troca de dia para ser mais suave
+  const changeDay = (newDay) => {
+    // Se já temos os dados no cache, não mostramos o loading
+    if (gamesCache[newDay]) {
+      setSelectedDay(newDay);
+    } else {
+      // Se não temos os dados, mostramos o loading e mudamos o dia
+      setLoading(true);
+      setSelectedDay(newDay);
+    }
+  };
 
   // Se um jogo foi selecionado via URL, encontre-o na lista
   const selectedGame = useMemo(() => {
@@ -276,7 +318,7 @@ function GamesList() {
       <div className="day-navigation">
         <button 
           className="day-nav-button"
-          onClick={() => setSelectedDay(prev => Math.max(prev - 1, -1))}
+          onClick={() => changeDay(Math.max(selectedDay - 1, -1))}
           disabled={selectedDay === -1}
         >
           <FiChevronLeft size={20} />
@@ -287,7 +329,7 @@ function GamesList() {
         </div>
         <button 
           className="day-nav-button"
-          onClick={() => setSelectedDay(prev => Math.min(prev + 1, 1))}
+          onClick={() => changeDay(Math.min(selectedDay + 1, 1))}
           disabled={selectedDay === 1}
         >
           <FiChevronRight size={20} />
