@@ -24,7 +24,7 @@ function GamesList() {
   const [showStartedGames, setShowStartedGames] = useState(false);
 
   // Estado para a aba ativa (esporte) – usado quando searchQuery estiver vazio
-  const [activeSport, setActiveSport] = useState("");
+  const [activeSport, setActiveSport] = useState("Futebol");
 
   // Estado para armazenar se cada campeonato está recolhido ou não
   const [collapsedLeagues, setCollapsedLeagues] = useState({});
