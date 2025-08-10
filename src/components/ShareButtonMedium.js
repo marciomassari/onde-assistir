@@ -46,7 +46,7 @@ const ShareButtonMedium = ({ title, url }) => {
 
   return (
     <>
-      <button className="share-button-medium" onClick={handleClick}>
+      <button className="share-button-medium" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleClick(); }}>
         <FiShare2 size={20} />
       </button>
       {modalOpen && (

@@ -401,7 +401,7 @@ function GamesList() {
                           (game.tv_networks.toLowerCase() !== 'indisponível' ? ` - Transmissão: ${game.tv_networks}` : "");
                         return (
                           <div key={index} className="game-row">
-                            <div className="game-info-wrapper">
+                            <a href={`/?game=${game.id}`} className="game-info-wrapper">
                               <div className="teams-row">
                                 <span className="home-team">
                                   {game.home_team_img && (
@@ -426,7 +426,7 @@ function GamesList() {
                                 </span>
                               </div>
                               <div className="tv-networks">{game.tv_networks}</div>
-                            </div>
+                            </a>
                             <div className="share-button-wrapper">
                               <ShareButtonMedium title={shareText} url={gameShareUrl} />
                             </div>

@@ -10,6 +10,11 @@ html {
   font-family: 'Arial', sans-serif;
 }
 
+.site-container a {
+  color: #e0e0e0;
+  text-decoration: none;
+}
+
 /* Header */
 .site-header {
   display: flex;
@@ -190,6 +195,7 @@ html {
   right: 10px; 
   opacity: 0;
   transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 2;
 }
 
 .game-row:hover .share-button-wrapper {
@@ -198,6 +204,16 @@ html {
 
 /* Media Queries para Mobile */
 @media (max-width: 768px) {
+  .share-button-wrapper {
+    opacity: 1;
+    position: relative;
+    top: 0;
+    right: 0;
+    margin-top: -25px;
+    margin-right: 10px;
+    display: flex;
+    justify-content: flex-end;
+  }
   .site-container {
     padding: 0 1rem;
   }
@@ -308,16 +324,23 @@ html {
     width: 100%;
     display: flex;
     justify-content: center;
-    padding: 4px 0;
+    padding: 10px 0 0;
     position: static;
     opacity: 1;
   }
 
   .game-info-wrapper {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-  }
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.game-info-wrapper:hover {
+  background-color: #363636;
+}
 }
 
 /* Ajustes para telas muito pequenas */
