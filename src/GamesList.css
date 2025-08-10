@@ -10,11 +10,6 @@ html {
   font-family: 'Arial', sans-serif;
 }
 
-.site-container a {
-  color: #e0e0e0;
-  text-decoration: none;
-}
-
 /* Header */
 .site-header {
   display: flex;
@@ -188,6 +183,11 @@ html {
   color: #aaa;
 }
 
+.game-info-wrapper {
+  color: #e0e0e0;
+  text-decoration: none;
+}
+
 /* Compartilhamento */
 .share-button-wrapper {
   position: absolute;
@@ -330,17 +330,18 @@ html {
   }
 
   .game-info-wrapper {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-}
+    color: #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+  }
 
-.game-info-wrapper:hover {
-  background-color: #363636;
-}
+  .game-info-wrapper:hover {
+    background-color: #363636;
+  }
 }
 
 /* Ajustes para telas muito pequenas */
